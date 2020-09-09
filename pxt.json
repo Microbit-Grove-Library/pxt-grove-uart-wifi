@@ -1,0 +1,17 @@
+{
+    "name": "GroveUartWifi",
+    "version": "0.0.1",
+    "description": "MakeCode extension for Seeed Studio Grove Uart Wifi v2",
+    "license": "MIT",
+    "dependencies": {
+        "core": "*"
+    },
+    "files": [
+        "README.md",
+        "main.ts"
+    ],
+    "testFiles": [
+        "test.ts"
+    ],
+    "public": true
+}
