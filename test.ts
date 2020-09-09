@@ -1,6 +1,6 @@
 groveuartwifi.setupWifi(
-    SerialPin.P1,
     SerialPin.P15,
+    SerialPin.P1,
     BaudRate.BaudRate115200,
     "test-ssid",
     "test-passwd"
