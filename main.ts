@@ -6,11 +6,8 @@
 /**
  * Functions to operate Grove module.
  */
-//% weight=10 color=#9F79EE icon="\uf108" block="Grove - UART WiFi V2"
+//% weight=10 color=#9F79EE icon="\uf108" block="Grove UART WiFi V2"
 namespace groveuartwifi {
-    // let serial = serial
-    // let input = input
-
     let isWifiConnected = false
 
     /**
@@ -54,24 +51,22 @@ namespace groveuartwifi {
         return isWifiConnected
     }
 
-    // export function setSerialBufferSize(size: number) {
-    //     serial.setRxBufferSize(size)
-    //     serial.setTxBufferSize(size)
-    // }
-
     /**
-    * Check if Grove - Uart WiFi V2 is connected to Wifi
+    * Send data to ThinkSpeak
     */
-    //% block="Send Data to your ThinkSpeak Channel|URL of ThinkSpeak %url|Write API Key %apiKey|Field1 %field1|Field2 %field2|Field3 %field3|Field4 %field4|Field5 %field5|Field6 %field6|Field7 %field7|Field8 %field8"
-    export function sendToThinkSpeak(url: string, apiKey: string, field1: number, field2: number, field3: number, field4: number, field5: number, field6: number, field7: number, field8: number) {
+    //% block="Send Data to your ThinkSpeak Channel|Write API Key %apiKey|Field1 %field1|Field2 %field2|Field3 %field3|Field4 %field4|Field5 %field5|Field6 %field6|Field7 %field7|Field8 %field8"
+    //% apiKey.def="your Write API Key"
+    export function sendToThinkSpeak(apiKey: string, field1: number, field2: number, field3: number, field4: number, field5: number, field6: number, field7: number, field8: number) {
         let result = 0
-        if (isWifiConnected) {
+        let retry = 2
+        while (isWifiConnected && retry > 0) {
+            retry = retry - 1;
             // establish TCP connection
-            sendAtCmd("AT+CIPSTART=\"TCP\",\"" + url + "\",80")
+            sendAtCmd("AT+CIPSTART=\"TCP\",\"api.thingspeak.com\",80")
             result = waitAtResponse("OK", "ALREADY CONNECTED", "ERROR", 2000)
-            if (result == 3) return false
-            let data = "GET /update?api_key=" + apiKey
+            if (result == 3) continue
 
+            let data = "GET /update?api_key=" + apiKey
             if (!isNaN(field1)) data = data + "&field1=" + field1
             if (!isNaN(field2)) data = data + "&field2=" + field2
             if (!isNaN(field3)) data = data + "&field3=" + field3
@@ -82,6 +77,8 @@ namespace groveuartwifi {
             if (!isNaN(field8)) data = data + "&field8=" + field8
 
             sendAtCmd("AT+CIPSEND=" + (data.length + 2))
+            result = waitAtResponse(">", "OK", "ERROR", 2000)
+            if (result == 3) continue
             sendAtCmd(data)
             result = waitAtResponse("SEND OK", "SEND FAIL", "ERROR", 5000)
 
@@ -89,10 +86,51 @@ namespace groveuartwifi {
             // sendAtCmd("AT+CIPCLOSE")
             // waitAtResponse("OK", "ERROR", "None", 2000)
 
-            if (result == 1) return true
-            else return false
+            if (result == 1) break
         }
-        return false
+    }
+
+    /**
+    * Send data to IFTTT
+    */
+    //% block="Send Data to your IFTTT Event|Event %event|Key %key|value1 %value1|value2 %value2|value3 %value3"
+    //% event.def="your Event"
+    //% key.def="your Key"
+    export function sendToIFTTT(event: string, key: string, value1: string, value2: string, value3: string) {
+        let result = 0
+        let retry = 2
+        while (isWifiConnected && retry > 0) {
+            retry = retry - 1;
+            // establish TCP connection
+            sendAtCmd("AT+CIPSTART=\"TCP\",\"maker.ifttt.com\",80")
+            result = waitAtResponse("OK", "ALREADY CONNECTED", "ERROR", 2000)
+            if (result == 3) continue
+
+            let data = "GET /trigger/" + event + "/with/key/" + key
+            data = data + "?value1=" + value1
+            data = data + "&value2=" + value2
+            data = data + "&value3=" + value3
+            data = data + " HTTP/1.1"
+            data = data + "\u000D\u000A"
+            data = data + "User-Agent: curl/7.58.0"
+            data = data + "\u000D\u000A"
+            data = data + "Host: maker.ifttt.com"
+            data = data + "\u000D\u000A"
+            data = data + "Accept: */*"
+            data = data + "\u000D\u000A"
+
+            sendAtCmd("AT+CIPSEND=" + (data.length + 2))
+            result = waitAtResponse(">", "OK", "ERROR", 2000)
+            if (result == 3) continue
+            sendAtCmd(data)
+            result = waitAtResponse("SEND OK", "SEND FAIL", "ERROR", 5000)
+
+            // // close the TCP connection
+            // sendAtCmd("AT+CIPCLOSE")
+            // waitAtResponse("OK", "ERROR", "None", 2000)
+
+            if (result == 1) break
+        }
     }
 
 
@@ -100,7 +138,6 @@ namespace groveuartwifi {
         let buffer = ""
         let start = input.runningTime()
 
-        // 1s timeout
         while ((input.runningTime() - start) < timeout) {
             buffer += serial.readString()
 
@@ -118,6 +155,12 @@ namespace groveuartwifi {
     function sendAtCmd(cmd: string) {
         serial.writeString(cmd + "\u000D\u000A")
     }
+
+    
+    // export function setSerialBufferSize(size: number) {
+    //     serial.setRxBufferSize(size)
+    //     serial.setTxBufferSize(size)
+    // }
 
 
 }
