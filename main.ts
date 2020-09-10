@@ -55,10 +55,17 @@ namespace groveuartwifi {
     * Send data to ThinkSpeak
     */
     //% block="Send Data to your ThinkSpeak Channel|Write API Key %apiKey|Field1 %field1|Field2 %field2|Field3 %field3|Field4 %field4|Field5 %field5|Field6 %field6|Field7 %field7|Field8 %field8"
-    //% apiKey.def="your Write API Key"
+    //% apiKey.defl="your Write API Key"
     export function sendToThinkSpeak(apiKey: string, field1: number, field2: number, field3: number, field4: number, field5: number, field6: number, field7: number, field8: number) {
         let result = 0
         let retry = 2
+
+        // close the previous TCP connection
+        if (isWifiConnected) {
+            sendAtCmd("AT+CIPCLOSE")
+            waitAtResponse("OK", "ERROR", "None", 2000)
+        }
+
         while (isWifiConnected && retry > 0) {
             retry = retry - 1;
             // establish TCP connection
@@ -94,11 +101,21 @@ namespace groveuartwifi {
     * Send data to IFTTT
     */
     //% block="Send Data to your IFTTT Event|Event %event|Key %key|value1 %value1|value2 %value2|value3 %value3"
-    //% event.def="your Event"
-    //% key.def="your Key"
+    //% event.defl="your Event"
+    //% key.defl="your Key"
+    //% value1.defl="hello"
+    //% value2.defl="micro"
+    //% value3.defl="bit"
     export function sendToIFTTT(event: string, key: string, value1: string, value2: string, value3: string) {
         let result = 0
         let retry = 2
+
+        // close the previous TCP connection
+        if (isWifiConnected) {
+            sendAtCmd("AT+CIPCLOSE")
+            waitAtResponse("OK", "ERROR", "None", 2000)
+        }
+
         while (isWifiConnected && retry > 0) {
             retry = retry - 1;
             // establish TCP connection
